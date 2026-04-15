@@ -1,22 +1,28 @@
+# Run with: docker compose -f docker-compose.prod.yml up -d
+
 version: "3.9"
 
 services:
 
+  # Nginx acts as a reverse proxy, routing incoming HTTP/HTTPS traffic to backend services
   nginx:
     image: nginx:latest
     container_name: reverse-proxy
 
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80"   # HTTP traffic
+      - "443:443" # HTTPS traffic
 
     volumes:
+      # Mount the prod Nginx config into the container as read-only
       - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      # Mount Cloudflare SSL certificates from the host for HTTPS termination
       - /etc/ssl/cloudflare:/etc/ssl/cloudflare
 
     networks:
-      - web-network
+      - web-network # Attach to the shared external network so Nginx can reach other services
 
+# Use a pre-existing external Docker network shared across multiple compose projects
 networks:
   web-network:
     external: true
